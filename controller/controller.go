@@ -22,42 +22,28 @@ func CreateUser(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Server Error")
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{
-		"status": "ok",
-	})
-}
-
-func GetUser(c *gin.Context) {
-	id := c.Param("id")
 	c.JSON(http.StatusOK, gin.H{
-		"id": id,
+		"message": "Account successfully created",
+		"user": gin.H{
+			"user_id":  user.UserID,
+			"nickname": user.Nickname,
+		},
 	})
 }
 
-func UpdateUser(c *gin.Context) {
-	// Implement logic to update an existing user
-}
+func GetUserByUserID(c *gin.Context) {
+	userID := c.Param("id")
+	userService := service.UserService{}
+	user, err := userService.GetUserByUserID(userID)
+	if err != nil {
+		c.String(http.StatusNotFound, "User not found")
+		return
+	}
 
-func DeleteUser(c *gin.Context) {
-	// Implement logic to delete a user
-}
-
-func GetPosts(c *gin.Context) {
-	// Implement logic to fetch posts
-}
-
-func GetPost(c *gin.Context) {
-	// Implement logic to fetch a single post
-}
-
-func CreatePost(c *gin.Context) {
-	// Implement logic to create a new post
-}
-
-func UpdatePost(c *gin.Context) {
-	// Implement logic to update an existing post
-}
-
-func DeletePost(c *gin.Context) {
-	// Implement logic to delete a post
+	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"user_id":  user.UserID,
+			"nickname": user.Nickname,
+		},
+	})
 }

@@ -1,12 +1,9 @@
 package model
 
 type User struct {
-	UserID   string `json:"user_id"`
-	Password string `json:"password"`
-	Nickname string `json:"nickname"`
-}
-
-type CreateUserResponse struct {
-	Message string `json:"message"`
-	User    User   `json:"user"`
+	ID       int64  `gorm:"primaryKey;autoIncrement" form:"id" json:"id"`
+	UserID   string `gorm:"type:varchar(255) binary" form:"user_id" json:"user_id"`
+	Password string `gorm:"type:varchar(255) binary" form:"password" json:"password"`
+	Nickname string `gorm:"type:varchar(255) binary" form:"nickname" json:"nickname"`
+	Comment  string `gorm:"type:varchar(255) binary" form:"comment" json:"comment"`
 }
