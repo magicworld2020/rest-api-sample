@@ -10,7 +10,7 @@ import (
 func main() {
 	// Load TLS certificate and private key
 	certFile := "demo/certificate.crt"
-	keyFile := "demo/private_key.key"
+	keyFile := "demo/private.key"
 	router := gin.Default()
 	router.POST("/signup", controller.CreateUser)
 	router.GET("/users/:id", controller.GetUserByUserID)
