@@ -28,15 +28,13 @@ func (userService *UserService) GetUserByUserID(userID string) (*model.User, err
 	}
 	return user, nil
 }
-
-// func (BookService) GetBookList() []model.Book {
-// 	tests := make([]model.Book, 0)
-// 	err := DbEngine.Distinct("id", "title", "content").Limit(10, 0).Find(&tests)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return tests
-// }
+func (userService *UserService) UpdateUser(user *model.User) error {
+	result := DbEngine.Save(user)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
 
 // func (BookService) UpdateBook(newBook *model.Book) error {
 // 	_, err := DbEngine.Id(newBook.Id).Update(newBook)

@@ -9,11 +9,7 @@ func main() {
 	router := gin.Default()
 	router.POST("/signup", controller.CreateUser)
 	router.GET("/users/:id", controller.GetUserByUserID)
-
-	// {
-	// 	v1.PUT("/posts/:id", controller.UpdatePost)
-	// 	v1.DELETE("/posts/:id", controller.DeletePost)
-	// }
+	router.PATCH("/users/:id", controller.UpdateUser)
 
 	router.Run(":8080")
 }
