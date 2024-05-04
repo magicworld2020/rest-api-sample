@@ -198,9 +198,7 @@ func UpdateUser(c *gin.Context) {
 	// Specifying a user with an ID different from the authenticated user
 	parts := strings.Split(authHeader, " ")
 	encodedCredentials := parts[1]
-	// Decode the Base64-encoded credentials
 	decodedCredentials, _ := base64.StdEncoding.DecodeString(encodedCredentials)
-	// Split the decoded credentials into user_id and password
 	credentials := strings.SplitN(string(decodedCredentials), ":", 2)
 	authUserID := credentials[0]
 	if authUserID != userID {
@@ -223,4 +221,32 @@ func UpdateUser(c *gin.Context) {
 			"comment":  user.Comment,
 		},
 	})
+}
+
+func DeleteUser(c *gin.Context) {
+	// Parse the Authorization header
+	authHeader := c.GetHeader("Authorization")
+
+	// Authenticate user
+	if !authenticateUser(authHeader) {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authentication Failed"})
+		return
+	}
+
+	parts := strings.Split(authHeader, " ")
+	encodedCredentials := parts[1]
+	decodedCredentials, _ := base64.StdEncoding.DecodeString(encodedCredentials)
+	credentials := strings.SplitN(string(decodedCredentials), ":", 2)
+	userID := credentials[0]
+
+	// Delete the user from the database
+	userService := service.UserService{}
+	err := userService.DeleteUser(userID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Server Error")
+		return
+	}
+
+	// Respond with success message
+	c.JSON(http.StatusOK, gin.H{"message": "Account and user successfully removed"})
 }

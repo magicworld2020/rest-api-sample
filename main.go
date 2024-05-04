@@ -10,6 +10,7 @@ func main() {
 	router.POST("/signup", controller.CreateUser)
 	router.GET("/users/:id", controller.GetUserByUserID)
 	router.PATCH("/users/:id", controller.UpdateUser)
+	router.POST("/close", controller.DeleteUser)
 
 	router.Run(":8080")
 }

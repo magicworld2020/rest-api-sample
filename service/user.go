@@ -36,19 +36,11 @@ func (userService *UserService) UpdateUser(user *model.User) error {
 	return nil
 }
 
-// func (BookService) UpdateBook(newBook *model.Book) error {
-// 	_, err := DbEngine.Id(newBook.Id).Update(newBook)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (BookService) DeleteBook(id int) error {
-// 	book := new(model.Book)
-// 	_, err := DbEngine.Id(id).Delete(book)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (userService *UserService) DeleteUser(userID string) error {
+	user := new(model.User)
+	result := DbEngine.Where("user_id = ?", userID).Delete(user)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
