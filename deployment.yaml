@@ -1,0 +1,132 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .DEPLOYMENT_NAME }}
+  namespace: {{ .KUBE_NAMESPACE }}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: {{ .APP_NAME }}
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .APP_NAME }}
+      annotations:
+        traffic.sidecar.istio.io/excludeOutboundPorts: "3306"
+    spec:
+      terminationGracePeriodSeconds: 300
+      automountServiceAccountToken: false
+      containers:
+        - name: {{ .APP_NAME }}
+          image: {{ .DOCKER_TAG }}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 600Mi
+            requests:
+              cpu: 100m
+              memory: 300Mi
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .GATEWAY_PORT }}
+              scheme: HTTP
+            failureThreshold: 1
+            periodSeconds: 10
+            initialDelaySeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: {{ .GATEWAY_PORT }}
+              scheme: HTTP
+            failureThreshold: 1
+            periodSeconds: 10
+            initialDelaySeconds: 20
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/ash", "-c", "sleep 180"]
+          envFrom:
+            # こちらの設定で、マイクロサービス毎に払い出されるMYSQLの情報をSecretから環境変数に設定します。
+            # 環境変数名は下記の４つです。
+            # MYSQL_DATABASE, MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD
+            - secretRef:
+                name: microservice-app-mysql
+            # こちらの設定で、マイクロサービス毎に設定するSecretから環境変数に設定します。
+            # KeyVaultに設定されたKey=Valueが対象になります。
+            - secretRef:
+                name: microservice-app-secrets
+            # こちらの設定で、マイクロサービス毎に設定するConfigMapから環境変数に設定します。
+            - configMapRef:
+                name: microservice-app-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .SERVICE_NAME }}
+  namespace: {{ .KUBE_NAMESPACE }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .APP_NAME }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .GATEWAY_PORT }}
+      targetPort: {{ .GATEWAY_PORT }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .LB_SERVICE_NAME }}
+  namespace: {{ .KUBE_NAMESPACE }}
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: {{ .APP_NAME }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .GATEWAY_PORT }}
+      targetPort: {{ .GATEWAY_PORT }}
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .HPA_NAME }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .DEPLOYMENT_NAME }}
+  minReplicas: 2
+  maxReplicas: 10
+  # CPU使用率またはメモリ使用率によってスケール
+  # 条件が複数の場合は、Pod数が多い指標を採用
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        # requestsの値をベースに%を評価
+        averageUtilization: 50
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageValue: 240Mi
+

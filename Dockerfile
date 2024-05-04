@@ -1,14 +1,11 @@
-FROM mysql:8.0-debian
+FROM golang:1.18 
 
-COPY my.cnf /etc/mysql/conf.d/my.cnf
+WORKDIR /go/src/github.com/magicworld2020/rest-api-sample/rest-api-sample
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go mod download
 
-RUN apt-get update && apt-get install -y locales \
-  && sed -i -e 's/# \(ja_JP.UTF-8\)/\1/' /etc/locale.gen \
-  && locale-gen \
-  && update-locale LANG=ja_JP.UTF-8
-
-ENV LC_ALL ja_JP.UTF-8
-ENV TZ Asia/Tokyo
-ENV LANG=ja_JP.UTF-8
-
-EXPOSE 3306
+COPY . .
+RUN go build -o main .
+EXPOSE 8080
+CMD ["./main"]
